@@ -1,0 +1,18 @@
+[project]
+name = "lantern"
+version = "0.0.0"
+description = "Probe-based schema inference for undocumented web surfaces — Sherpa's upstream classifier."
+readme = "README.md"
+requires-python = "==3.12.*"
+dependencies = [
+    "playwright==1.58.0",
+    "pydantic==2.13.3",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
