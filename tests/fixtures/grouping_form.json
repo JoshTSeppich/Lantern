@@ -1,0 +1,109 @@
+{
+  "description": "Synthetic grouping fixture representing the following ARIA-annotated HTML (not loaded here — the HTML is documentary; this JSON is what probe.py would extract from a real DOM). Structure:\n\n  <h2 id='label-username'>Your username</h2>\n  <form id='form-login' aria-label='Login'>\n    <label id='label-password'>Password</label>\n    <input id='in-username' aria-labelledby='label-username' aria-describedby='hint-username' aria-required='true'>\n    <span id='hint-username'>Must be lowercase</span>\n    <input id='in-password' aria-labelledby='label-password'>\n    <button id='btn-submit' aria-controls='status-area'>Submit</button>\n    <div id='status-area' role='status'></div>\n  </form>\n  <aside id='sidebar-aside'>\n    <button id='btn-tip' data-tip='true'>Tip</button>\n  </aside>\n\nLayout: the form's inputs and button all share the same layout_group_id='form-grid-1' (same CSS grid parent). The aside's button is in a separate layout_group_id='aside-col'. The h2 is outside any form/grid.\n\nExpected grouping:\n  - in-username labelled_by h2 (label-username); described_by hint-username; form_ancestor form-login; spatial_group form-grid-1\n  - in-password labelled_by label-password; form_ancestor form-login; spatial_group form-grid-1\n  - btn-submit controls status-area; form_ancestor form-login; spatial_group form-grid-1\n  - btn-tip outside form; spatial_group aside-col; no ARIA refs\n  - hint-username and label-username are not themselves focusable; they appear as ARIA reference TARGETS only — they're in the element list with focusable=false (documentary), but ARIA refs to them ARE resolved (they're real DOM elements with IDs).\n  - label-password has no references to/from; present only for form membership completeness.",
+  "elements": [
+    {
+      "element_id": "in-username",
+      "aria_attributes": {
+        "aria-labelledby": "label-username",
+        "aria-describedby": "hint-username",
+        "aria-required": "true"
+      },
+      "form_ancestor_id": "form-login",
+      "layout_group_id": "form-grid-1",
+      "focusable": true
+    },
+    {
+      "element_id": "in-password",
+      "aria_attributes": {
+        "aria-labelledby": "label-password"
+      },
+      "form_ancestor_id": "form-login",
+      "layout_group_id": "form-grid-1",
+      "focusable": true
+    },
+    {
+      "element_id": "btn-submit",
+      "aria_attributes": {
+        "aria-controls": "status-area"
+      },
+      "form_ancestor_id": "form-login",
+      "layout_group_id": "form-grid-1",
+      "focusable": true
+    },
+    {
+      "element_id": "btn-tip",
+      "aria_attributes": {
+        "data-tip": "true"
+      },
+      "form_ancestor_id": null,
+      "layout_group_id": "aside-col",
+      "focusable": true
+    },
+    {
+      "element_id": "label-username",
+      "aria_attributes": {},
+      "form_ancestor_id": null,
+      "layout_group_id": null,
+      "focusable": false
+    },
+    {
+      "element_id": "label-password",
+      "aria_attributes": {},
+      "form_ancestor_id": "form-login",
+      "layout_group_id": "form-grid-1",
+      "focusable": false
+    },
+    {
+      "element_id": "hint-username",
+      "aria_attributes": {},
+      "form_ancestor_id": "form-login",
+      "layout_group_id": "form-grid-1",
+      "focusable": false
+    },
+    {
+      "element_id": "status-area",
+      "aria_attributes": {},
+      "form_ancestor_id": "form-login",
+      "layout_group_id": "form-grid-1",
+      "focusable": false
+    }
+  ],
+  "expected": {
+    "in-username": {
+      "labelled_by": ["label-username"],
+      "described_by": ["hint-username"],
+      "controls": [],
+      "owns": [],
+      "active_descendant": null,
+      "form_ancestor": "form-login",
+      "spatial_group": "form-grid-1"
+    },
+    "in-password": {
+      "labelled_by": ["label-password"],
+      "described_by": [],
+      "controls": [],
+      "owns": [],
+      "active_descendant": null,
+      "form_ancestor": "form-login",
+      "spatial_group": "form-grid-1"
+    },
+    "btn-submit": {
+      "labelled_by": [],
+      "described_by": [],
+      "controls": ["status-area"],
+      "owns": [],
+      "active_descendant": null,
+      "form_ancestor": "form-login",
+      "spatial_group": "form-grid-1"
+    },
+    "btn-tip": {
+      "labelled_by": [],
+      "described_by": [],
+      "controls": [],
+      "owns": [],
+      "active_descendant": null,
+      "form_ancestor": null,
+      "spatial_group": "aside-col"
+    }
+  }
+}
