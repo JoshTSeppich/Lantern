@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>probe deferred</title>
+    <style>body { font-family: sans-serif; margin: 1em; }</style>
+</head>
+<body>
+    <main>
+        <h1>probe deferred — async-rendering test for claim 2 (tab-order post-settling)</h1>
+        <button id="before">Before deferred</button>
+        <div id="slot"></div>
+    </main>
+    <script>
+        // Insert three deferred focusable elements at 100ms, 500ms, 1000ms after load.
+        // settle_ms=2000 means networkidle+2000ms wait easily captures all three.
+        setTimeout(() => {
+            const b = document.createElement('button');
+            b.id = 'deferred-1';
+            b.textContent = 'Deferred 1 (100ms)';
+            document.getElementById('slot').appendChild(b);
+        }, 100);
+
+        setTimeout(() => {
+            const b = document.createElement('button');
+            b.id = 'deferred-2';
+            b.textContent = 'Deferred 2 (500ms)';
+            document.getElementById('slot').appendChild(b);
+        }, 500);
+
+        setTimeout(() => {
+            const b = document.createElement('button');
+            b.id = 'after';
+            b.textContent = 'After deferred (1000ms)';
+            document.body.appendChild(b);
+        }, 1000);
+
+        setTimeout(() => {
+            window.__allDeferredDone = true;
+        }, 1100);
+    </script>
+</body>
+</html>

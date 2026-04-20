@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>probe simple</title>
+    <style>
+        body { font-family: sans-serif; margin: 1em; }
+        form { display: grid; grid-template-columns: 1fr 2fr; gap: 0.5em; max-width: 40em; }
+        label { align-self: center; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 id="page-heading">probe simple</h1>
+    </header>
+    <nav aria-label="Primary">
+        <a id="nav-home" href="#home">Home</a>
+        <a id="nav-about" href="#about">About</a>
+    </nav>
+    <main>
+        <form id="login-form">
+            <label id="label-u" for="in-u">Username</label>
+            <input id="in-u" type="text" aria-labelledby="label-u" aria-describedby="hint-u" required>
+            <span id="hint-u">Lowercase please.</span>
+            <label id="label-p" for="in-p">Password</label>
+            <input id="in-p" type="password" aria-labelledby="label-p">
+            <button id="submit" type="submit" aria-controls="status">Submit</button>
+            <div id="status" role="status"></div>
+        </form>
+    </main>
+    <footer>
+        <a id="ft-terms" href="#terms">Terms</a>
+        <a id="ft-privacy" href="#privacy">Privacy</a>
+    </footer>
+</body>
+</html>
