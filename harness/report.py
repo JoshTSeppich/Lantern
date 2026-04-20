@@ -32,6 +32,32 @@ docstring on the same commit as sites_stability.yaml (chore(L-06)). If a
 later rerun would produce a different verdict under a different
 operationalization, that is a finding, not a tuning opportunity.
 
+OBSERVATION SECTIONS (pre-registered per operator 2026-04-20, while the
+first harness run was in flight but BEFORE any data was inspected):
+
+  O1. Per-site error rate — bot blocks, timeouts, cookie-consent failures
+      bucketed by error_type per site. Counts only; does not influence
+      verdict.
+
+  O2. Per-site elapsed_ms distribution — min, median, max, p95 of
+      timing.total_elapsed_ms for ok probes, per site. Sanity-checks
+      whether settle_ms=2000 holds for SPA-heavy sites.
+
+  O3. 200-endpoint cap saturation — which sites produced at least one
+      probe with fingerprint_size == DEFAULT_TAB_DEPTH_CAP (200). A
+      saturated probe indicates the tab-depth cap truncated the tab
+      traversal before termination, which biases the fingerprint.
+
+  O4. Session-state warm-vs-fresh sanity check — within-site mean
+      distance stratified by pair type (fresh-fresh, warm-warm,
+      fresh-warm). Given probe.py's known limitation (warm currently
+      == fresh in implementation), expect these three means to be
+      indistinguishable. If fresh-warm ≠ fresh-fresh materially, that's
+      a surprise finding for post-L-06 investigation.
+
+These four are observations, NOT rubric inputs. They land in the report
+whatever the Pass/Soft-Pass/Fail verdict is.
+
 Outputs:
   - Prints the scorecard to stdout.
   - Writes adrs/L-06-stability-report.md with the full report body.
@@ -51,6 +77,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from lantern.distance import levenshtein_normalized
+from lantern.probe import DEFAULT_TAB_DEPTH_CAP
 
 
 HARNESS_DIR = Path(__file__).parent
@@ -182,23 +209,130 @@ def main() -> int:
             f"| {site_id} | {category} | {probes_count} | {len(dists)} | {p95:.4f} |"
         )
 
-    # Per-site failure breakdown
+    # -----------------------------------------------------------------
+    # Observation sections O1–O4 (pre-registered 2026-04-20; see docstring)
+    # -----------------------------------------------------------------
+
+    # O1 — Per-site error rate bucketed by error_type
+    from collections import Counter
     errors_by_site: dict[str, list[dict]] = {}
     for d in all_loaded:
         if d.get("status") == "error":
             errors_by_site.setdefault(d["site_id"], []).append(d)
-    if errors_by_site:
+    ok_by_site: dict[str, int] = {}
+    total_by_site: dict[str, int] = {}
+    for d in all_loaded:
+        sid = d.get("site_id", "?")
+        total_by_site[sid] = total_by_site.get(sid, 0) + 1
+        if d.get("status") == "ok":
+            ok_by_site[sid] = ok_by_site.get(sid, 0) + 1
+
+    lines.extend([
+        "",
+        "## O1 — Per-site error rate (pre-registered observation)",
+        "",
+        "| Site | Ok / Total | Error types |",
+        "|---|---:|---|",
+    ])
+    for site_id in sorted(total_by_site.keys()):
+        total = total_by_site[site_id]
+        ok = ok_by_site.get(site_id, 0)
+        err_types = Counter(e["error_type"] for e in errors_by_site.get(site_id, []))
+        err_label = ", ".join(f"{k}×{v}" for k, v in err_types.most_common()) or "—"
+        lines.append(f"| {site_id} | {ok}/{total} | {err_label} |")
+
+    # O2 — Per-site elapsed_ms distribution (ok probes only)
+    lines.extend([
+        "",
+        "## O2 — Per-site `timing.total_elapsed_ms` distribution (ok probes)",
+        "",
+        "Sanity-checks whether `settle_ms=2000` holds; SPA-heavy sites may push the tail. Units: milliseconds.",
+        "",
+        "| Site | n | min | median | p95 | max |",
+        "|---|---:|---:|---:|---:|---:|",
+    ])
+    for site_id in sorted(by_site.keys()):
+        elapsed = [p["timing"]["total_elapsed_ms"] for p in by_site[site_id]]
+        if not elapsed:
+            continue
+        lines.append(
+            f"| {site_id} | {len(elapsed)} | {min(elapsed)} | "
+            f"{int(percentile(elapsed, 50))} | {int(percentile(elapsed, 95))} | {max(elapsed)} |"
+        )
+
+    # O3 — 200-endpoint cap saturation
+    cap_saturated_sites: list[tuple[str, int, int]] = []
+    for site_id, site_probes in by_site.items():
+        sizes = [p["fingerprint_size"] for p in site_probes]
+        saturated_count = sum(1 for s in sizes if s >= DEFAULT_TAB_DEPTH_CAP)
+        if saturated_count > 0:
+            cap_saturated_sites.append((site_id, saturated_count, len(site_probes)))
+
+    lines.extend([
+        "",
+        f"## O3 — 200-endpoint cap saturation (DEFAULT_TAB_DEPTH_CAP={DEFAULT_TAB_DEPTH_CAP})",
+        "",
+    ])
+    if cap_saturated_sites:
         lines.extend([
+            "Sites where at least one probe hit the tab-depth cap. A capped probe truncated the traversal before body-return / already-seen; its fingerprint is biased (right-censored).",
             "",
-            "## Per-site failure breakdown",
-            "",
-            "| Site | Failed probes | Example error |",
-            "|---|---:|---|",
+            "| Site | Saturated probes | Total ok probes |",
+            "|---|---:|---:|",
         ])
-        for site_id in sorted(errors_by_site.keys()):
-            fails = errors_by_site[site_id]
-            example = fails[0].get("error_type", "?")
-            lines.append(f"| {site_id} | {len(fails)} | {example} |")
+        for site_id, sat, tot in sorted(cap_saturated_sites):
+            lines.append(f"| {site_id} | {sat} | {tot} |")
+    else:
+        lines.append("No probe hit the 200-endpoint cap. All traversals terminated naturally.")
+
+    # O4 — Session-state warm-vs-fresh sanity check
+    # For each site, compute mean within-site normalized Levenshtein
+    # stratified by pair type.
+    lines.extend([
+        "",
+        "## O4 — Session-state `warm` vs `fresh` sanity check",
+        "",
+        "Mean within-site normalized-Levenshtein, stratified by pair type. probe.py's known limitation (warm currently == fresh in implementation) predicts the three means to be indistinguishable. Material separation of fresh–warm from fresh–fresh and warm–warm would be a surprise finding.",
+        "",
+        "| Site | fresh–fresh (n) | warm–warm (n) | fresh–warm (n) |",
+        "|---|---|---|---|",
+    ])
+    for site_id in sorted(by_site.keys()):
+        site_probes = by_site[site_id]
+        ff, ww, fw = [], [], []
+        for a, b in combinations(site_probes, 2):
+            d = levenshtein_normalized(a["_fingerprint_tuples"], b["_fingerprint_tuples"])
+            a_s, b_s = a["session"], b["session"]
+            if a_s == "fresh" and b_s == "fresh":
+                ff.append(d)
+            elif a_s == "warm" and b_s == "warm":
+                ww.append(d)
+            else:
+                fw.append(d)
+
+        def fmt(xs: list[float]) -> str:
+            if not xs:
+                return "— (0)"
+            mean = sum(xs) / len(xs)
+            return f"{mean:.4f} ({len(xs)})"
+
+        lines.append(
+            f"| {site_id} | {fmt(ff)} | {fmt(ww)} | {fmt(fw)} |"
+        )
+
+    # Category-boundary findings flagged at run-launch (operator 2026-04-20)
+    lines.extend([
+        "",
+        "## Known findings (flagged pre-run, 2026-04-20)",
+        "",
+        "1. **saas-01 + saas-02 both are login pages** (Linear + Asana). Login form shapes are structurally near-identical regardless of underlying product: two inputs + submit button dominate the fingerprint. Cross-site-within-SaaS distance will be artificially low. Not a rubric problem (rubric pools cross-site across ALL different-site pairs, not per-category), but a shape-class boundary signal: if L-07 discrimination clusters SaaS logins with marketing-landing forms rather than as their own class, that is a substantive finding about what 'SaaS dashboard shape' means when the authenticated surface is out of scope per LANTERN.md Part 5.",
+        "",
+        "2. **Forum category has 1 site (HN), not 2.** No within-category cross-site comparison possible for forum; the uneven distribution documented in `sites_stability.yaml` acknowledges this. L-07's 5-sites-per-category design fills the gap.",
+        "",
+        "3. **probe.py `session_state='warm'` currently == `'fresh'`** (fresh BrowserContext per probe, no cross-probe cookie retention). Observation O4 above is the sanity check: three within-site pair-type means are expected indistinguishable.",
+        "",
+        "Cookie banners on EU-served responses, SPA routing-induced networkidle delay, and near-zero within-site variance on HN/Wikipedia were named as expected observations at run-launch (operator 2026-04-20). They land here as observations, never as rubric-relaxation evidence.",
+    ])
 
     report = "\n".join(lines) + "\n"
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
