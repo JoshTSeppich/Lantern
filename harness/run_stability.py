@@ -38,6 +38,11 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+# `lantern` is not pip-installed (pyproject has [tool.uv] package=false); pytest
+# picks it up via `pythonpath=['.']` but direct `uv run python` does not. Prepend
+# the repo root so `from lantern...` resolves.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import yaml
 from playwright.sync_api import sync_playwright
 

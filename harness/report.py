@@ -47,6 +47,9 @@ import sys
 from itertools import combinations
 from pathlib import Path
 
+# `lantern` not pip-installed; see note in run_stability.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from lantern.distance import levenshtein_normalized
 
 
