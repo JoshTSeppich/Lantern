@@ -125,7 +125,7 @@ Contract changes require `contracts(group-X): freeze` commit. No silent drift.
 
 ### 1.5 — Verification dashboard
 
-A `lantern/harness/dashboard.py` CLI renders live investigation state. Fields from `state.json`:
+A `harness/dashboard.py` CLI renders live investigation state. Fields from `state.json`:
 
 - Current ticket and phase
 - Spike status per L-SPIKE-NN (pending/green/red/failed)
@@ -228,7 +228,9 @@ Python 3.12 (pinned in `pyproject.toml`). Playwright pinned to a single version,
 
 ### R1.3 — Dashboard extension
 
-`lantern/harness/dashboard.py` is a CLI that reads `state.json` and renders the current investigation state. Runs in a separate terminal during development. See §1.5 for fields and red-flag conditions.
+`harness/dashboard.py` is a CLI that reads `state.json` and renders the current investigation state. Runs in a separate terminal during development. See §1.5 for fields and red-flag conditions.
+
+Location rationale: `harness/` sits at repo root (not inside the `lantern/` package) because the harness is investigation tooling, explicitly "NOT shipped" per §R1.1. Keeping it outside the installed package prevents harness code from ending up in the pip-distributed artifact.
 
 ### R1.4 — Project identity
 
