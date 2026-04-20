@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>L-SPIKE-01 fixture — tab order + activeElement</title>
+    <style>
+        body { font-family: sans-serif; max-width: 720px; margin: 2em auto; padding: 1em; }
+        fieldset { margin: 1em 0; padding: 1em; }
+        legend { font-weight: bold; }
+        .decoy { color: #999; font-style: italic; }
+        [role="button"], [role="combobox"], span[tabindex] {
+            display: inline-block;
+            padding: 0.25em 0.5em;
+            border: 1px solid #888;
+            cursor: pointer;
+            margin: 0.25em 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>L-SPIKE-01 fixture</h1>
+    <p>20 focusable elements of varying types, plus non-focusable decoys. Tab-order verification fixture.</p>
+
+    <nav aria-label="Primary navigation">
+        <legend>Primary nav</legend>
+        <a id="focusable-01" href="#home">Home</a>
+        <a id="focusable-02" href="#about">About</a>
+    </nav>
+
+    <main>
+        <section aria-labelledby="actions-heading">
+            <h2 id="actions-heading">Actions</h2>
+            <button id="focusable-03">Primary action</button>
+            <button id="focusable-04" type="button" aria-label="Close dialog">×</button>
+
+            <!-- Decoy: disabled buttons are not focusable -->
+            <button class="decoy" disabled>Disabled (decoy; should NOT receive focus)</button>
+        </section>
+
+        <form aria-labelledby="form-heading">
+            <h2 id="form-heading">Form controls</h2>
+            <label>Username <input id="focusable-05" type="text" placeholder="username"></label>
+            <label>Password <input id="focusable-06" type="password"></label>
+            <label>Email <input id="focusable-07" type="email" placeholder="name@example.com"></label>
+            <label>Age <input id="focusable-08" type="number" min="0" max="120"></label>
+            <label>Remember me <input id="focusable-09" type="checkbox"></label>
+            <label>Plan: basic <input id="focusable-10" type="radio" name="plan" value="basic" checked></label>
+
+            <label>Country
+                <select id="focusable-11">
+                    <option>US</option>
+                    <option>CA</option>
+                    <option>MX</option>
+                </select>
+            </label>
+
+            <label>Comments
+                <textarea id="focusable-12" rows="3" placeholder="Optional"></textarea>
+            </label>
+        </form>
+
+        <section aria-labelledby="custom-heading">
+            <h2 id="custom-heading">Custom widgets (tabindex=0)</h2>
+            <div id="focusable-13" role="button" tabindex="0">Custom button</div>
+            <div id="focusable-14" role="combobox" tabindex="0" aria-expanded="false" aria-haspopup="listbox">Custom combobox</div>
+            <span id="focusable-15" tabindex="0">Span with tabindex</span>
+
+            <!-- Decoy: tabindex=-1 is focusable programmatically but not via Tab -->
+            <div class="decoy" tabindex="-1">tabindex=-1 (decoy; should NOT receive Tab focus)</div>
+
+            <!-- Decoy: plain div, no tabindex -->
+            <div class="decoy">Plain div (decoy; should NOT receive focus)</div>
+        </section>
+    </main>
+
+    <footer>
+        <a id="focusable-16" href="#terms">Terms</a>
+        <a id="focusable-17" href="#privacy">Privacy</a>
+        <button id="focusable-18">Submit</button>
+        <input id="focusable-19" type="submit" value="Submit form">
+        <button id="focusable-20" type="button">Cancel</button>
+    </footer>
+</body>
+</html>
