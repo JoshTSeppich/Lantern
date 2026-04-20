@@ -1,0 +1,87 @@
+# L-06 stability site list — PRE-REGISTERED
+#
+# Commit: chore(L-06) — committed BEFORE harness/run_stability.py is invoked.
+# Any change to this list AFTER evidence collection begins is a rubric-drift
+# event per BUILD.md §R4 and must be flagged, not silently accepted.
+#
+# Category distribution (per operator 2026-04-20 tight spec):
+#   2 e-commerce, 2 news, 2 saas, 2 marketing, 1 forum, 1 misc = 10 sites.
+#   Uneven because 10 does not divide cleanly by 6; the point is shape-class
+#   diversity, not uniform representation.
+#
+# Site-stability assumption: entry pages picked for mostly-static structure
+# between visits. News sites point at section pages rather than volatile
+# front pages. SaaS category is represented by login pages (public entry)
+# because LANTERN.md Part 5 § Out of Scope excludes authenticated dashboards.
+#
+# Automation compatibility: picked to be unlikely to hard-block headless
+# Chromium with a Desktop Chrome UA at ~20 probes per site over a single
+# run window. Known automation-hostile sites (Amazon, Google search,
+# Cloudflare-gated sites) deliberately avoided.
+#
+# Known limitation to surface in L-06 report (not a rubric relaxation):
+#   probe.py's session_state='warm' is currently implemented equivalently
+#   to 'fresh' (each probe() creates a new BrowserContext with no
+#   cross-probe cookie retention). The 2-session-state dimension is thus
+#   a duplicate axis for this run. If the stability verdict depends on
+#   true warm-state behavior, that is a separate probe.py refactor
+#   motivated by L-06 findings — not grounds to tune the rubric.
+
+category_distribution:
+  e-commerce: 2
+  news: 2
+  saas: 2
+  marketing: 2
+  forum: 1
+  misc: 1
+
+sites:
+  - id: e-commerce-01
+    url: https://www.rei.com/c/sale
+    category: e-commerce
+    justification: "REI sale category page — mainstream custom retail commerce; product-grid shape; category taxonomy stable between visits."
+
+  - id: e-commerce-02
+    url: https://shop.tesla.com/
+    category: e-commerce
+    justification: "Tesla Shop (Shopify-backed) — representative of the Shopify shape class; main categories stable."
+
+  - id: news-01
+    url: https://arstechnica.com/science/
+    category: news
+    justification: "Ars Technica science section — custom WordPress; section-level page less volatile than the Ars front page; article-list shape."
+
+  - id: news-02
+    url: https://www.theverge.com/tech
+    category: news
+    justification: "The Verge tech section — Vox modern JS-heavy stack; different platform family from Ars; article-list shape."
+
+  - id: saas-01
+    url: https://linear.app/login
+    category: saas
+    justification: "Linear login — SaaS public entry (authenticated dashboard out-of-scope per LANTERN.md Part 5); React SPA; form shape."
+
+  - id: saas-02
+    url: https://app.asana.com/-/login
+    category: saas
+    justification: "Asana login — SaaS public entry; different React SPA from Linear; form shape."
+
+  - id: marketing-01
+    url: https://stripe.com/
+    category: marketing
+    justification: "Stripe marketing landing — dev-tool vertical; semantic HTML typical of developer-audience marketing."
+
+  - id: marketing-02
+    url: https://tailwindcss.com/
+    category: marketing
+    justification: "Tailwind CSS landing — Next.js + Tailwind (meta: eats its own dogfood); dev-tool marketing; different stack from Stripe."
+
+  - id: forum-01
+    url: https://news.ycombinator.com/
+    category: forum
+    justification: "Hacker News — canonical forum/aggregator; Arc web server + minimal HTML; near-zero JS; uniquely static structure that provides a low-variance floor."
+
+  - id: misc-01
+    url: https://en.wikipedia.org/wiki/Web_accessibility
+    category: misc
+    justification: "Wikipedia article (Web accessibility) — MediaWiki; content-rich static article; editorial stability (edits rare, structure fixed)."
