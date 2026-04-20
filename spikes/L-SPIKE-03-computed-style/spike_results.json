@@ -1,0 +1,57 @@
+{
+  "spike_id": "L-SPIKE-03",
+  "playwright_version": "1.58.0",
+  "fixture_path": "/Users/joshuatseppich/lantern/spikes/L-SPIKE-03-computed-style/fixture.html",
+  "target_element_count": 200,
+  "observed_element_count": 200,
+  "cap_ms": 2000,
+  "passes": 5,
+  "properties_read_per_element": 10,
+  "property_names_read": [
+    "display",
+    "position",
+    "gridColumn",
+    "gridRow",
+    "flexDirection",
+    "flexBasis",
+    "width",
+    "height",
+    "margin",
+    "padding"
+  ],
+  "warmup_in_browser_ms": 2.200000047683716,
+  "warmup_py_roundtrip_ms": 4.994167014956474,
+  "in_browser_ms_per_pass": [
+    0.5,
+    0.5,
+    0.2999999523162842,
+    0.2999999523162842,
+    0.5
+  ],
+  "py_roundtrip_ms_per_pass": [
+    1.496708020567894,
+    1.2368750758469105,
+    1.1798751074820757,
+    1.2185419909656048,
+    1.1288330424576998
+  ],
+  "in_browser_min_ms": 0.2999999523162842,
+  "in_browser_median_ms": 0.5,
+  "in_browser_max_ms": 0.5,
+  "per_element_us_median": 2.5,
+  "sample_first_element_styles": {
+    "display": "block",
+    "position": "static",
+    "gridColumn": "auto",
+    "gridRow": "auto",
+    "flexDirection": "row",
+    "flexBasis": "auto",
+    "width": "136.391px",
+    "height": "21px",
+    "margin": "0px",
+    "padding": "2px 6px"
+  },
+  "claim_1_element_count": true,
+  "claim_2_under_cap_ms": true,
+  "verdict": "GREEN"
+}

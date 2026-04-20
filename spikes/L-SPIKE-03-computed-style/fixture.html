@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>L-SPIKE-03 fixture — 200 focusable elements, varied layout containers</title>
+    <style>
+        body { font-family: sans-serif; margin: 1em; }
+        h1 { font-size: 1.2em; }
+        .grid-container { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; padding: 4px; margin-bottom: 0.5em; }
+        .flex-container { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; margin-bottom: 0.5em; }
+        .block-container { padding: 4px; margin-bottom: 0.5em; }
+        .inline-block-container { padding: 4px; margin-bottom: 0.5em; }
+        .inline-block-container .item { display: inline-block; margin: 1px; }
+        .item { padding: 2px 6px; font-size: 0.85em; border-radius: 3px; }
+        .class-a { background: #eef; border: 1px solid #88a; color: #223; }
+        .class-b { background: #fee; border: 1px solid #a88; color: #322; }
+        .class-c { background: #efe; border: 1px solid #8a8; color: #232; }
+        .class-d { background: #ffe; border: 1px solid #aa8; color: #332; }
+    </style>
+</head>
+<body>
+    <h1>L-SPIKE-03 fixture — 200 focusable buttons, mixed layout containers</h1>
+    <div id="root"></div>
+    <script>
+        (() => {
+            const root = document.getElementById('root');
+            const plan = [
+                { count: 50, containerClass: 'grid-container',         itemClass: 'class-a' },
+                { count: 50, containerClass: 'grid-container',         itemClass: 'class-b' },
+                { count: 50, containerClass: 'flex-container',         itemClass: 'class-c' },
+                { count: 30, containerClass: 'block-container',        itemClass: 'class-d' },
+                { count: 20, containerClass: 'inline-block-container', itemClass: 'class-a' },
+            ];
+            let idx = 0;
+            for (const { count, containerClass, itemClass } of plan) {
+                const container = document.createElement('div');
+                container.className = containerClass;
+                for (let i = 0; i < count; i++) {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'item ' + itemClass;
+                    b.id = 'focusable-' + String(idx + 1).padStart(3, '0');
+                    b.textContent = 'Btn ' + (idx + 1);
+                    container.appendChild(b);
+                    idx++;
+                }
+                root.appendChild(container);
+            }
+            window.__fixtureReady = true;
+            window.__fixtureCount = idx;
+        })();
+    </script>
+</body>
+</html>
