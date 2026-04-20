@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>L-SPIKE-02 fixture — AX tree state-bitmap and landmark coverage</title>
+    <style>
+        body { font-family: sans-serif; max-width: 760px; margin: 2em auto; padding: 1em; }
+        fieldset { margin: 1em 0; padding: 0.75em; border: 1px solid #ccc; }
+        legend { font-weight: bold; }
+        [role="button"], [role="checkbox"], [role="combobox"], [role="tab"], span[tabindex] {
+            display: inline-block; padding: 0.2em 0.5em; border: 1px solid #888;
+            cursor: pointer; margin: 0.15em 0;
+        }
+        [role="tab"][aria-selected="true"] { background: #d0e8ff; }
+    </style>
+</head>
+<body>
+    <header id="page-header">
+        <h1 id="banner-heading">L-SPIKE-02 fixture</h1>
+        <p>State-bitmap coverage + landmark ancestry verification fixture.</p>
+    </header>
+
+    <nav id="primary-nav" aria-label="Primary navigation">
+        <ul>
+            <li><a id="nav-link-1" href="#main-content">Jump to main</a></li>
+            <li><a id="nav-link-2" href="#sidebar">Jump to sidebar</a></li>
+        </ul>
+    </nav>
+
+    <main id="main-content">
+        <h2 id="main-heading">State-bitmap per-field coverage</h2>
+
+        <fieldset>
+            <legend>expanded — aria-expanded</legend>
+            <button id="state-expanded" aria-expanded="true" aria-controls="expanded-panel">
+                Disclosure toggle (expanded=true)
+            </button>
+            <div id="expanded-panel">Panel body.</div>
+        </fieldset>
+
+        <fieldset>
+            <legend>haspopup — aria-haspopup</legend>
+            <button id="state-haspopup" aria-haspopup="menu">
+                Open menu (haspopup=menu)
+            </button>
+        </fieldset>
+
+        <fieldset>
+            <legend>selected — aria-selected on role=tab</legend>
+            <div role="tablist" aria-label="Tabs">
+                <div id="state-selected" role="tab" tabindex="0" aria-selected="true">Active tab</div>
+                <div role="tab" tabindex="-1" aria-selected="false">Inactive tab</div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>checked — native input[type=checkbox] + role=checkbox aria-checked</legend>
+            <label>
+                <input id="state-checked-native" type="checkbox" checked>
+                Native checkbox (checked)
+            </label>
+            <div id="state-checked-aria" role="checkbox" tabindex="0" aria-checked="true">
+                Custom checkbox (aria-checked=true)
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>disabled — native disabled attr + aria-disabled</legend>
+            <button id="state-disabled-native" disabled>Disabled (native)</button>
+            <button id="state-disabled-aria" aria-disabled="true">Disabled (aria)</button>
+        </fieldset>
+
+        <fieldset>
+            <legend>required — native required attr + aria-required</legend>
+            <form aria-label="Required-form">
+                <label>Name <input id="state-required-native" type="text" required></label>
+                <label>Email <input id="state-required-aria" type="email" aria-required="true"></label>
+            </form>
+        </fieldset>
+
+        <fieldset>
+            <legend>invalid — aria-invalid</legend>
+            <label>
+                Bad value
+                <input id="state-invalid" type="text" aria-invalid="true" value="bad">
+            </label>
+        </fieldset>
+
+        <fieldset>
+            <legend>readonly — native readonly attr + aria-readonly</legend>
+            <label>
+                Native readonly
+                <input id="state-readonly-native" type="text" readonly value="read-only value">
+            </label>
+            <label>
+                Aria readonly
+                <input id="state-readonly-aria" type="text" aria-readonly="true" value="aria read-only">
+            </label>
+        </fieldset>
+    </main>
+
+    <aside id="sidebar" aria-label="Related content">
+        <h2>Related</h2>
+        <p id="sidebar-para">Sidebar paragraph — descendant for ancestry verification.</p>
+    </aside>
+
+    <footer id="page-footer">
+        <p id="footer-para">Footer paragraph — descendant for ancestry verification.</p>
+    </footer>
+</body>
+</html>
