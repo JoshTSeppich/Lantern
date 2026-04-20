@@ -180,7 +180,7 @@ Starting with focus on `document.body`, send `Tab` keypresses in a loop. After e
 2. Extract the following fields:
    - **role** — ARIA role, or computed role from tag name. Unknown roles → `generic`.
    - **accessible_name** — computed accessible name, truncated to 64 chars, lowercased. Stripped from fingerprint but retained in sidecar.
-   - **state_bitmap** — 8-bit field encoding: `expanded` | `haspopup` | `selected` | `checked` | `disabled` | `required` | `invalid` | `readonly`. 0 for unset.
+   - **state_bitmap** — 8-bit field encoding: `expanded` | `haspopup` | `selected` | `checked` | `disabled` | `required` | `invalid` | `readonly`. 0 for unset. **Field names are the canonical lowercase form (R0.7);** `lantern/vocab.py` is the single normalization boundary that maps CDP's actual property names — which may be camelCase (e.g., CDP surfaces `hasPopup` for `aria-haspopup` per L-SPIKE-02 finding) — to this canonical form on ingest. See ADR 0004.
    - **landmark** — nearest ancestor landmark element: `main`, `nav`, `header`, `footer`, `aside`, or `none`.
    - **tag_name** — HTML tag, for sidecar only.
 3. Append the `(role, state_bitmap, landmark)` tuple to the fingerprint.
