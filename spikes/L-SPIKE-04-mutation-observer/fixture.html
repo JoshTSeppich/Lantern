@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>L-SPIKE-04 fixture — mutation observer + settlement</title>
+    <style>
+        body { font-family: sans-serif; margin: 1em; max-width: 720px; }
+        button { padding: 0.5em 1em; margin: 0.25em 0; }
+        section { margin: 1em 0; padding: 0.75em; border: 1px solid #ccc; }
+        section h2 { font-size: 1em; margin: 0 0 0.5em 0; }
+        .hidden { display: none; }
+        .panel { min-height: 1.5em; background: #fafafa; padding: 0.25em; }
+    </style>
+</head>
+<body>
+    <h1>L-SPIKE-04 fixture — settlement detection</h1>
+
+    <section>
+        <h2>Case A — known state change (reveal hidden content)</h2>
+        <button id="btn-state-change">Reveal panel</button>
+        <div id="panel-A" class="hidden panel">Revealed content.</div>
+    </section>
+
+    <section>
+        <h2>Case B — no-op (no handler)</h2>
+        <button id="btn-no-op">Does nothing</button>
+    </section>
+
+    <section>
+        <h2>Case C — progressive mutation (3 × ~200ms apart)</h2>
+        <button id="btn-progressive">Fire 3 mutations spaced 200ms</button>
+        <div id="panel-C" class="panel"></div>
+    </section>
+
+    <section>
+        <h2>Case D — continuous mutation (tests in-transition at cap)</h2>
+        <button id="btn-continuous">Start continuous mutation</button>
+        <div id="panel-D" class="panel"></div>
+    </section>
+
+    <script>
+        document.getElementById('btn-state-change').addEventListener('click', () => {
+            document.getElementById('panel-A').classList.remove('hidden');
+        });
+
+        // Case B — intentionally no handler
+
+        document.getElementById('btn-progressive').addEventListener('click', () => {
+            const panel = document.getElementById('panel-C');
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const p = document.createElement('p');
+                    p.textContent = 'Progressive mutation ' + (i + 1);
+                    panel.appendChild(p);
+                }, i * 200);
+            }
+        });
+
+        document.getElementById('btn-continuous').addEventListener('click', () => {
+            const panel = document.getElementById('panel-D');
+            setInterval(() => {
+                const p = document.createElement('p');
+                p.textContent = 'continuous @ ' + performance.now().toFixed(0);
+                panel.appendChild(p);
+                while (panel.childElementCount > 10) panel.removeChild(panel.firstChild);
+            }, 100);
+        });
+
+        window.__fixtureReady = true;
+    </script>
+</body>
+</html>

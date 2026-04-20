@@ -1,0 +1,341 @@
+{
+  "spike_id": "L-SPIKE-04",
+  "playwright_version": "1.58.0",
+  "fixture_path": "/Users/joshuatseppich/lantern/spikes/L-SPIKE-04-mutation-observer/fixture.html",
+  "settlement_definition": "networkidle + 2000ms + no mutations in observer for 500ms, capped at 8000ms total (Case D uses a reduced cap of 2000ms for spike runtime)",
+  "quiet_ms": 500,
+  "cap_ms_default": 8000,
+  "cases": [
+    {
+      "case_id": "A",
+      "description": "Reveal hidden panel (one-shot DOM mutation \u2014 classList.remove). Happy path baseline.",
+      "probes_failure_mode": "happy-path \u2014 verifies observer catches a real attribute mutation and declares settled after 500ms quiet.",
+      "selector": "#btn-state-change",
+      "cap_ms_used": 8000,
+      "expected": {
+        "state": "settled-post-state-change",
+        "mutation_count_min": 1,
+        "mutation_count_max": 3,
+        "elapsed_ms_min": 500,
+        "elapsed_ms_max": 800
+      },
+      "detector_result": {
+        "state": "settled-post-state-change",
+        "cap_hit": false,
+        "mutation_count": 1,
+        "elapsed_ms": 512.3999998569489,
+        "quiet_elapsed_at_resolution_ms": 508.39999985694885,
+        "mutations": [
+          {
+            "type": "attributes",
+            "target": "DIV",
+            "added": 0,
+            "removed": 0,
+            "attr": "class",
+            "ts_ms": 3.5999999046325684
+          }
+        ],
+        "mutations_truncated": false
+      },
+      "checks": {
+        "state_match": true,
+        "count_min_ok": true,
+        "count_max_ok": true,
+        "elapsed_min_ok": true,
+        "elapsed_max_ok": true
+      },
+      "case_pass": true
+    },
+    {
+      "case_id": "B",
+      "description": "Click button with no handler. Probes false-positive.",
+      "probes_failure_mode": "false-positive \u2014 observer must register 0 mutations; detector must classify as unchanged-by-interaction (not settled-post-state-change).",
+      "selector": "#btn-no-op",
+      "cap_ms_used": 8000,
+      "expected": {
+        "state": "unchanged-by-interaction",
+        "mutation_count_min": 0,
+        "mutation_count_max": 0,
+        "elapsed_ms_min": 500,
+        "elapsed_ms_max": 800
+      },
+      "detector_result": {
+        "state": "unchanged-by-interaction",
+        "cap_hit": false,
+        "mutation_count": 0,
+        "elapsed_ms": 511.90000009536743,
+        "quiet_elapsed_at_resolution_ms": 511.80000019073486,
+        "mutations": [],
+        "mutations_truncated": false
+      },
+      "checks": {
+        "state_match": true,
+        "count_min_ok": true,
+        "count_max_ok": true,
+        "elapsed_min_ok": true,
+        "elapsed_max_ok": true
+      },
+      "case_pass": true
+    },
+    {
+      "case_id": "C",
+      "description": "Fire 3 mutations at 0/200/400 ms. Probes false-negative (quiet-window reset).",
+      "probes_failure_mode": "false-negative \u2014 broken detector would settle after the first 500ms quiet window, missing mutations 2 and 3. Verifies quiet window RESETS on each new mutation rather than measuring from a fixed reference point.",
+      "selector": "#btn-progressive",
+      "cap_ms_used": 8000,
+      "expected": {
+        "state": "settled-post-state-change",
+        "mutation_count_min": 3,
+        "mutation_count_max": 5,
+        "elapsed_ms_min": 800,
+        "elapsed_ms_max": 1300
+      },
+      "detector_result": {
+        "state": "settled-post-state-change",
+        "cap_hit": false,
+        "mutation_count": 3,
+        "elapsed_ms": 920.5,
+        "quiet_elapsed_at_resolution_ms": 516.8999998569489,
+        "mutations": [
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 2.700000047683716
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 203.30000019073486
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 403.60000014305115
+          }
+        ],
+        "mutations_truncated": false
+      },
+      "checks": {
+        "state_match": true,
+        "count_min_ok": true,
+        "count_max_ok": true,
+        "elapsed_min_ok": true,
+        "elapsed_max_ok": true
+      },
+      "case_pass": true
+    },
+    {
+      "case_id": "D",
+      "description": "Continuous mutations every 100ms. Probes cap-boundary in-transition classification.",
+      "probes_failure_mode": "cap-boundary \u2014 ongoing mutations must be classified as in-transition (not settled-post-state-change, not unchanged-by-interaction). Verifies the three-state distinction holds at cap.",
+      "selector": "#btn-continuous",
+      "cap_ms_used": 2000,
+      "expected": {
+        "state": "in-transition",
+        "mutation_count_min": 15,
+        "mutation_count_max": null,
+        "elapsed_ms_min": 1950,
+        "elapsed_ms_max": 2200
+      },
+      "detector_result": {
+        "state": "in-transition",
+        "cap_hit": true,
+        "mutation_count": 30,
+        "elapsed_ms": 2049.600000143051,
+        "quiet_elapsed_at_resolution_ms": 47.200000047683716,
+        "mutations": [
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 104.29999995231628
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 202.60000014305115
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 302.7000000476837
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 402.10000014305115
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 502.7000000476837
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 603
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 703.2999999523163
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 802.2000000476837
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 902
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 1002.5
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 1103.6000001430511
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 0,
+            "removed": 1,
+            "attr": null,
+            "ts_ms": 1103.6000001430511
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 1202.9000000953674
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 0,
+            "removed": 1,
+            "attr": null,
+            "ts_ms": 1202.9000000953674
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 1302.2999999523163
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 0,
+            "removed": 1,
+            "attr": null,
+            "ts_ms": 1302.4000000953674
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 1402.4000000953674
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 0,
+            "removed": 1,
+            "attr": null,
+            "ts_ms": 1402.4000000953674
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 1,
+            "removed": 0,
+            "attr": null,
+            "ts_ms": 1502.7999999523163
+          },
+          {
+            "type": "childList",
+            "target": "DIV",
+            "added": 0,
+            "removed": 1,
+            "attr": null,
+            "ts_ms": 1502.7999999523163
+          }
+        ],
+        "mutations_truncated": true
+      },
+      "checks": {
+        "state_match": true,
+        "count_min_ok": true,
+        "count_max_ok": true,
+        "elapsed_min_ok": true,
+        "elapsed_max_ok": true
+      },
+      "case_pass": true
+    }
+  ],
+  "observed_states": [
+    "in-transition",
+    "settled-post-state-change",
+    "unchanged-by-interaction"
+  ],
+  "claim_1_three_states_distinguished": true,
+  "claim_2_happy_path_A": true,
+  "claim_3_false_positive_probe_B": true,
+  "claim_4_false_negative_probe_C": true,
+  "claim_5_cap_boundary_D": true,
+  "claim_6_all_cases_pass": true,
+  "verdict": "GREEN"
+}
