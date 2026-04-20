@@ -1,0 +1,96 @@
+{
+  "description": "Small synthetic AX tree + tab-order sequence for L-03 endpoints tests. Root WebArea contains a navigation landmark with 2 link children, a main landmark with 1 button (carrying camelCase hasPopup property to exercise the L-SPIKE-02 regression through endpoints → fingerprint), one ignored node (should be filtered), one node without backendDOMNodeId (should be filtered), and a terminal WebArea return (body-return termination).",
+  "ax_tree": [
+    {
+      "nodeId": "root",
+      "role": {"type": "role", "value": "WebArea"},
+      "name": {"type": "computedString", "value": ""},
+      "properties": [],
+      "backendDOMNodeId": 1,
+      "parentId": null,
+      "childIds": ["nav1", "main1"],
+      "ignored": false
+    },
+    {
+      "nodeId": "nav1",
+      "role": {"type": "role", "value": "navigation"},
+      "name": {"type": "computedString", "value": "Primary"},
+      "properties": [],
+      "backendDOMNodeId": 2,
+      "parentId": "root",
+      "childIds": ["link1", "link2"],
+      "ignored": false
+    },
+    {
+      "nodeId": "link1",
+      "role": {"type": "role", "value": "link"},
+      "name": {"type": "computedString", "value": "Home"},
+      "properties": [],
+      "backendDOMNodeId": 10,
+      "parentId": "nav1",
+      "childIds": [],
+      "ignored": false
+    },
+    {
+      "nodeId": "link2",
+      "role": {"type": "role", "value": "link"},
+      "name": {"type": "computedString", "value": "About"},
+      "properties": [],
+      "backendDOMNodeId": 11,
+      "parentId": "nav1",
+      "childIds": [],
+      "ignored": false
+    },
+    {
+      "nodeId": "main1",
+      "role": {"type": "role", "value": "main"},
+      "name": {"type": "computedString", "value": ""},
+      "properties": [],
+      "backendDOMNodeId": 3,
+      "parentId": "root",
+      "childIds": ["btn1", "ignored1", "nobackend1"],
+      "ignored": false
+    },
+    {
+      "nodeId": "btn1",
+      "role": {"type": "role", "value": "button"},
+      "name": {"type": "computedString", "value": "Submit"},
+      "properties": [
+        {"name": "expanded", "value": {"type": "booleanOrUndefined", "value": false}},
+        {"name": "hasPopup", "value": {"type": "token", "value": "menu"}}
+      ],
+      "backendDOMNodeId": 20,
+      "parentId": "main1",
+      "childIds": [],
+      "ignored": false
+    },
+    {
+      "nodeId": "ignored1",
+      "role": {"type": "role", "value": "generic"},
+      "properties": [],
+      "backendDOMNodeId": 21,
+      "parentId": "main1",
+      "childIds": [],
+      "ignored": true
+    },
+    {
+      "nodeId": "nobackend1",
+      "role": {"type": "role", "value": "button"},
+      "name": {"type": "computedString", "value": "Orphan"},
+      "properties": [],
+      "backendDOMNodeId": null,
+      "parentId": "main1",
+      "childIds": [],
+      "ignored": false
+    }
+  ],
+  "tab_order_node_ids": ["link1", "link2", "btn1", "ignored1", "nobackend1", "root"],
+  "dom_tags": {"10": "a", "11": "a", "20": "button", "21": "div"},
+  "expected": {
+    "description": "Tab order visits link1, link2, btn1 (valid endpoints, produced as ProbeRecords), then ignored1 (skipped because ignored), nobackend1 (skipped because no backendDOMNodeId), then root (body-return termination — remaining stopped). Expected output: 3 ProbeRecords in order link1, link2, btn1.",
+    "probe_record_count": 3,
+    "ordered_ax_roles": ["link", "link", "button"],
+    "ordered_accessible_names": ["home", "about", "submit"],
+    "btn1_properties_has_haspopup": true
+  }
+}
