@@ -461,12 +461,13 @@ Lantern is done when:
 
 Before writing any code or running any spike, your first response must:
 
-1. **Environment check.** Confirm Python 3.12 available, Playwright installable, CDP accessible. Report any blockers.
-2. **§C0 read confirmation.** Confirm you have read §C0 and understand which cairn primitives apply to this Tier 3 build. List them back.
-3. **R0 revision plan.** Restate R0.1–R0.6 as a checklist, one line per revision, and identify which section of `LANTERN.md` each edit lands in.
-4. **Risk ranking.** Identify the highest-risk spike. My prior: L-SPIKE-04 (mutation observer + settlement detection) because false negatives produce silent state-miss and false positives produce false deltas. Confirm or rank differently with reasoning.
-5. **File layout confirmation.** Propose the exact `lantern/` directory structure from §R1.1, flag anything you'd change and why.
-6. **Ask for "go"** before starting R0.
+1. **LANTERN.md presence check** (§R6.0). Verify `LANTERN.md` is present at repo root and record its current git SHA (the pre-R0 SHA, frozen before R0.1–R0.6 are applied). If absent, halt and flag — do not improvise content or proceed to later §R6 steps.
+2. **Environment check.** Confirm Python 3.12 available, Playwright installable, CDP accessible. Report any blockers.
+3. **§C0 read confirmation.** Confirm you have read §C0 and understand which cairn primitives apply to this Tier 3 build. List them back.
+4. **R0 revision plan.** Restate R0.1–R0.6 as a checklist, one line per revision, and identify which section of `LANTERN.md` each edit lands in.
+5. **Risk ranking.** Identify the highest-risk spike. My prior: L-SPIKE-04 (mutation observer + settlement detection) because false negatives produce silent state-miss and false positives produce false deltas. Confirm or rank differently with reasoning.
+6. **File layout confirmation.** Propose the exact `lantern/` directory structure from §R1.1, flag anything you'd change and why.
+7. **Ask for "go"** before starting R0.
 
 If anything in §C0–§R5 is ambiguous or contradicts `LANTERN.md`, flag before starting. Do not improvise.
 
