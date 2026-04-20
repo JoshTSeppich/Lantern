@@ -36,6 +36,8 @@ Consequence: **the accessibility tree is the least-hidden, most-honest represent
 
 Lantern reads the a11y tree because that's where sites are structurally obligated to tell the truth about themselves.
 
+**But compliance pressure is not uniform across the web (R0.6).** Consumer-facing commercial sites — Shopify shops, airline checkouts, major publishers — face real WCAG litigation risk and are typically honest. Legacy SaaS, internal enterprise tools, and indie-web sites face less legal pressure and tend to have substantial accessibility gaps: divs-with-onclick widgets, missing ARIA relationships, inconsistent landmarks. Lantern reads the same a11y tree on both, but the signal is cleaner on the former. The per-category Completeness reporting requirement (Part 5) is how we observe this variance empirically — rather than assuming it or dismissing it.
+
 This is also why the methodology is low-overhead: we're not parsing, rendering, or reverse-engineering. We're reading a representation the browser has already computed and that the site is legally compelled to keep accurate.
 
 ---
@@ -205,6 +207,8 @@ Build a relationship graph: nodes are focused elements, edges are typed relation
 
 ## Step 3 — Poke selection (Methodology D setup)
 
+*(This policy is pinned as a measurement surface per R0.2 — see Part 5 § Measurement Surface Freeze § Probe configuration. Mid-investigation changes are rubric-drift events.)*
+
 From the initial fingerprint, select primary endpoints to poke. Policy:
 
 - All elements with role `button` inside `main`
@@ -255,7 +259,9 @@ Shape := {
 
 ## Step 6 — Shape library lookup (Methodology A application)
 
-Compute distance from this shape to each shape in the library:
+**The library does not exist prior to the discrimination test (R0.1).** It is the *output* of the discrimination test — see Part 5 § Discrimination criterion. During the stability and discrimination phases, the first ~30 probes run without a library to compare against and emit `shape_id="unknown"` by construction. Clustering at L-07 bootstraps the library from those 30 probes. No hand-authored seed shapes; no pre-seeded library carried across investigations.
+
+Once the library exists, compute distance from this shape to each shape in the library:
 
 - Primary distance: Levenshtein on the `static_fingerprint` role-sequence
 - Secondary distance (tiebreak): Jaccard on the set of state-transition endpoint kinds
@@ -270,7 +276,7 @@ If `confidence < 0.6`: assign `shape_id = "unknown"`. Record as candidate for li
 
 If `shape_id != "unknown"` and `confidence >= 0.6`:
 
-Call the hint-generation LLM with the following inputs:
+Call the hint-generation LLM with one of the two pre-registered prompt variants (R0.5) — see Part 5 § Utility criterion for variant definitions. During the utility investigation, both variants are run per task for comparison; production runtime uses a single selected variant (selection policy pinned at L-11). Inputs to the prompt:
 - `shape_id` and its canonical description from the library
 - The new shape's sidecar (names, tags)
 - The new shape's state_transitions summary
@@ -322,27 +328,45 @@ Four sub-questions — one added from the prior revision because the REST-API fr
 
 30 sites × 1 full probe across 6 categories (5 each): e-commerce, news, SaaS dashboard, marketing landing, forum/social, misc. Hierarchical agglomerative clustering on primary distance with secondary tiebreak.
 
+**Clustering uses the A+B+C static fingerprint only (R0.3).** Methodology D's output (state-transition deltas) is excluded from the distance computation used for clustering. This prevents circularity between shape classification and Methodology D's completeness evaluation — if D's output fed clustering, a cluster would be partly defined by the very thing Completeness is trying to measure.
+
 - **Pass:** 4–8 clusters emerge, category-majority >70%
 - **Soft pass:** 3 or 9–12 clusters, category-majority 50–70%
 - **Fail:** 1–2 or >12 clusters, category-majority <50%
 
-### Completeness criterion *(new)*
+### Completeness criterion *(new, refactored per R0.4)*
 
-Same 30 discrimination sites. Run each twice: once with Methodology A+B only (single-pass static), once with full A+B+C+D (three-pass). Compare the set of focusable elements discovered.
+Same 30 discrimination sites. Run each twice: once with Methodology A+B only (single-pass static), once with full A+B+C+D (three-pass). Compare the set of focusable elements discovered per run.
 
-- **Pass:** full probe discovers ≥25% more distinct focusable elements than single-pass probe on ≥70% of sites
-- **Soft pass:** ≥15% more on ≥50% of sites
-- **Fail:** <10% more, or full probe does not meaningfully exceed single-pass — meaning Methodology D is not earning its cost
+**Pass is per-shape-class, two-condition — both conditions must hold.**
 
-This criterion is what justifies the extra cost of the three-pass protocol. If it fails, Lantern scopes down to A+B+C only.
+Shape classes are derived from discrimination clusters (§ Discrimination criterion). Each cluster is labeled as either **dynamic-interaction-heavy** (e.g., e-commerce product page, SaaS dashboard with modals, interactive forum thread) or **static-content** (e.g., news article, marketing landing without interactive widgets). Dynamic/static labeling happens once, post-discrimination and pre-completeness-harness, committed as an ADR. Changes thereafter are rubric-drift events.
 
-### Utility criterion
+- **Condition (i) — dynamic classes:** the three-pass probe discovers ≥25% more distinct focusable elements than single-pass on ≥70% of sites within that class. Evaluated independently per dynamic class.
+- **Condition (ii) — static classes:** the three-pass probe produces ~0% delta — this is the correct-null behavior. Spurious state-transition elements on static content indicate Methodology D is noisy. The operational threshold for "~0%" is pinned in a pre-L-09 ADR (before the completeness harness runs) and frozen thereafter.
 
-20 Sherpa tasks × 10 held-out sites × 2 conditions (blind vs Lantern-primed). McNemar paired test.
+**Pass:** both (i) and (ii) hold across all evaluated shape classes.
+**Soft pass:** (i) is met on some but not all dynamic classes, OR (ii) is marginally violated (documented exceptions, small-magnitude). Keep Methodology D, flag findings.
+**Fail:** (i) fails on all dynamic classes (Methodology D not earning its cost) OR (ii) fails broadly (Methodology D generates false deltas on static content). Scope down to A+B+C if (i) fails; investigate separately if only (ii) fails.
 
-- **Pass:** ≥10 point pass-rate improvement, p<0.05
-- **Soft pass:** 5–10 point improvement, or p<0.10
-- **Fail:** no improvement or degradation
+**Reporting requirement (R0.4):** results are published as two tables — per-shape-class AND per-category. Per-category reporting is how we observe compliance-pressure variance by site type (Part 1 / R0.6). Neither table is optional.
+
+This criterion is what justifies the extra cost of the three-pass protocol. If the class-aware pass fails, Lantern scopes down to A+B+C only (Methodology D dropped).
+
+### Utility criterion *(dual-variant per R0.5)*
+
+20 Sherpa tasks × 10 held-out sites × 2 conditions (blind vs Lantern-primed) × **2 prompt variants** = 80 runs. McNemar paired test run independently per variant (blind vs primed).
+
+**Prompt variants (pre-registered, authored at L-10):**
+- **Variant A — terse:** minimal framing, short hints, relies on Sherpa's base prompt for structure
+- **Variant B — explicit:** explicit scaffolding, labeled sections, more verbose hints
+
+The two variants differ on one pre-declared axis: **terseness vs explicitness**. The axis can only change with documented justification as a rubric-drift event. Both variants are committed to `lantern/prompts/` before any utility-harness data collection. A **decision table** for disambiguating prompt-failure (a variant is bad) from classification-failure (Lantern's `shape_id` is wrong) is committed alongside the prompts and applied to the utility results.
+
+- **Pass:** ≥10 point pass-rate improvement on **both** variants, p<0.05
+- **Soft pass:** 5–10 point improvement on one or both variants, or p<0.10
+- **Fail:** no improvement or degradation on both variants
+- **Prompt-variant disagreement (>5 points between variants):** flagged; decision table applied; classification-vs-prompt cannot be disambiguated without further investigation (halts the utility verdict pending resolution)
 
 ### Investigation verdict mapping
 
@@ -369,10 +393,11 @@ This criterion is what justifies the extra cost of the three-pass protocol. If i
 - Poke timeout: 8s total per poke
 - Hint count cap: 5, each ≤40 tokens
 - Distance: Levenshtein primary, Jaccard secondary, size-of-delta tertiary
+- **Poke-selection policy (pinned per R0.2):** from each probe's initial fingerprint, poke (a) all elements with role `button` inside `main`, (b) all elements with role `link` inside `nav` landmark (up to 10, in tab order), (c) the first element with role `textbox` inside a form, (d) any element with `aria-haspopup` set. Dedup by `(role, accessible-name-hash, landmark)`. Mid-investigation changes are rubric-drift events.
 
-### Hint-generation prompt as measurement surface
+### Hint-generation prompts as measurement surface *(R0.5)*
 
-The hint-generation prompt (Part 4 Step 7) is drafted **after discrimination clusters emerge** (so the prompt knows what shape classes exist) and **before utility runs** (so utility-run results don't retroactively tune the prompt). Committed to `lantern/prompts/hint_generation.md`. Post-hoc prompt quality concerns are findings, not drift justifications.
+The two pre-registered hint-generation prompt variants (Part 4 Step 7; variant definitions in § Utility criterion above) are drafted **after discrimination clusters emerge** (so the prompts know what shape classes exist) and **before any utility run** (so utility-run results don't retroactively tune the prompts). Both variants committed to `lantern/prompts/hint_generation_terse.md` and `lantern/prompts/hint_generation_explicit.md`. A decision table distinguishing prompt-failure from classification-failure is committed alongside the prompt files. Post-hoc prompt quality concerns are findings, not drift justifications.
 
 ### Sherpa integration surface (pinned for utility test)
 
@@ -466,7 +491,7 @@ Soft-fallthrough on any failure. No regression risk.
 3. Discrimination test + report
 4. Completeness test + report
 5. Library seeded from discrimination clusters
-6. Hint-generation prompt authored + committed
+6. Hint-generation prompt variants (terse + explicit) and decision table authored + committed (per R0.5)
 7. `classify()` API surface
 8. Pip-packaged with pinned Playwright
 
@@ -512,7 +537,9 @@ lantern/
 │   ├── library.py                 # pattern library + nearest-neighbor lookup
 │   ├── hints.py                   # LLM-backed hint generation
 │   ├── prompts/
-│   │   └── hint_generation.md     # frozen hint-gen prompt
+│   │   ├── hint_generation_terse.md      # variant A (pre-registered per R0.5)
+│   │   ├── hint_generation_explicit.md   # variant B (pre-registered per R0.5)
+│   │   └── DECISION_TABLE.md             # prompt-failure vs classification-failure (R0.5)
 │   └── vocab.py                   # WAI-ARIA roles, state-bitmap encoding, landmarks
 │
 ├── harness/                       # investigation harness, NOT shipped
@@ -592,7 +619,7 @@ lantern/
 11. `lantern/rescan.py` + tests
 12. `harness/run_completeness.py` — justify or drop Methodology D
 13. Completeness report. Proceed with full Lantern or scope-down to A+B+C.
-14. `lantern/prompts/hint_generation.md` authored and committed
+14. `lantern/prompts/hint_generation_terse.md` + `lantern/prompts/hint_generation_explicit.md` + decision table authored and committed (per R0.5)
 15. `lantern/hints.py` + `lantern/api.py`
 16. `harness/run_utility.py` on Sherpa integration
 17. Utility report, ADR, integration touch, merge or revert
