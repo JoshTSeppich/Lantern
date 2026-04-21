@@ -1,8 +1,11 @@
 """
 L-09 completeness report — applies ADR 0003 (cluster labels + aggregation) +
-ADR 0002 (static-class threshold) to L-09 rescan evidence.
+ADR 0002 (static-class threshold) + ADR 0006 (N=0 → INDETERMINATE) to L-09
+rescan evidence.
 
-Pre-registered operationalization (pinned here pre-evidence):
+Pre-registered operationalization (pinned via ADR 0003 + ADR 0002 pre-evidence;
+ADR 0006 added post-L-09-evidence as a rubric gap-fill, NOT tuning — see
+adrs/0006-n-zero-indeterminate.md):
 
   Per-site metric:
     N = initial_fingerprint_size from L-07 probe
@@ -11,29 +14,30 @@ Pre-registered operationalization (pinned here pre-evidence):
             if outcome.kind == 'state_change')
         (data/completeness_pairs/{site_id}.json, `m_delta_sum`)
 
-    Per ADR 0003: N from L-07 probe (baseline captured at discrimination
-    time). M from L-09 rescan (per-poke-sum; deliberate pro-D bias).
+  Per-site verdict (per ADR 0003 + ADR 0002 + ADR 0006):
+    L-09 status != 'ok'   → FAIL (site errored at harness level)
+    N == 0                → INDETERMINATE (un-probeable; ADR 0006)
+    Dynamic cluster       → PASS iff M / N >= 0.25
+    Static cluster        → PASS iff M <= max(2, ceil(0.05 * N))
 
-  Per-site verdict (per ADR 0003 + ADR 0002):
-    Dynamic cluster: site passes iff M / N >= 0.25
-    Static cluster:  site passes iff M <= max(2, ceil(0.05 * N))
-    Sites with L-09 rescan status=='error' are per-site FAIL.
-
-  Per-cluster verdict:
+  Per-cluster verdict (ADR 0003 part b, amended by ADR 0006 denominator):
+    n_evaluable = n_pass + n_fail    (INDETERMINATE sites excluded)
+    cluster_pass_rate = n_pass / n_evaluable
     Pass      — pass_rate >= 0.70
     Soft Pass — 0.50 <= pass_rate < 0.70
     Fail      — pass_rate < 0.50
+    INDETERMINATE — n_evaluable == 0 (all members un-probeable; ADR 0006)
 
-  Investigation-level Completeness verdict (4 evaluated clusters;
-  Cluster 4 excluded per ADR 0003 INDETERMINATE):
-    PASS      — n_pass      > n_evaluated/2   → >=3 of 4 clusters Pass
+  Investigation-level Completeness verdict (over clusters that are neither
+  ADR-0003-label-INDETERMINATE nor ADR-0006-cluster-INDETERMINATE):
+    PASS      — n_pass      > n_evaluated/2
     SOFT PASS — n_pass_soft > n_evaluated/2 AND NOT PASS
-                → >=3 of 4 Pass-or-Soft, but <3 Pass
     FAIL      — otherwise
 
   Halt rule (BUILD.md §R3 L-09):
-    FAIL on dynamic clusters (0, 2) → scope-down (drop Methodology D).
-    FAIL on static clusters (1, 3) only → finding, not scope-down.
+    FAIL on dynamic clusters → scope-down (drop Methodology D).
+    FAIL on static clusters only → finding, not scope-down.
+    INDETERMINATE dynamic clusters do NOT trigger scope-down (per ADR 0006).
     Mixed → per-cluster breakdown.
 
 Outputs:
@@ -113,19 +117,27 @@ def _load_l09_by_site() -> dict[str, dict]:
 
 def _per_site_verdict(
     cluster_label: str, n: int, m: int, l09_status: str
-) -> tuple[bool, str]:
-    """Return (passed, reason) per ADR 0003 part (b)."""
+) -> tuple[str, str]:
+    """Return (verdict, reason) per ADR 0003 part (b) + ADR 0006.
+
+    Verdict ∈ {'PASS', 'FAIL', 'INDETERMINATE'}.
+    """
     if l09_status != "ok":
-        return False, f"l09 status={l09_status}"
+        return "FAIL", f"l09 status={l09_status}"
+    if n == 0:
+        return "INDETERMINATE", "N=0 un-probeable site (ADR 0006)"
     if cluster_label == "dynamic":
-        ratio = m / n if n > 0 else 0.0
-        passed = ratio >= DYNAMIC_PASS_RATIO
-        return passed, f"M/N={ratio:.4f} vs threshold={DYNAMIC_PASS_RATIO}"
+        ratio = m / n
+        verdict = "PASS" if ratio >= DYNAMIC_PASS_RATIO else "FAIL"
+        return verdict, f"M/N={ratio:.4f} vs threshold={DYNAMIC_PASS_RATIO}"
     if cluster_label == "static":
         threshold = static_threshold(n)
-        passed = m <= threshold
-        return passed, f"M={m} vs threshold=max(2, ceil(0.05*{n}))={threshold}"
-    return False, f"unexpected cluster label {cluster_label}"
+        verdict = "PASS" if m <= threshold else "FAIL"
+        return verdict, f"M={m} vs threshold=max(2, ceil(0.05*{n}))={threshold}"
+    if cluster_label == "indeterminate":
+        # ADR 0003 Cluster 4 — no per-site verdict; cluster is excluded from aggregation
+        return "EXCLUDED", "cluster label is indeterminate (ADR 0003)"
+    return "FAIL", f"unexpected cluster label {cluster_label}"
 
 
 def _cluster_verdict(pass_rate: float) -> str:
@@ -164,7 +176,8 @@ def main() -> int:
 
         per_site: list[dict] = []
         n_pass_sites = 0
-        n_sites_counted = len(members)
+        n_fail_sites = 0
+        n_indeterminate_sites = 0
 
         for site_id in members:
             n = n_by_site.get(site_id)
@@ -172,38 +185,52 @@ def main() -> int:
             if n is None or l09 is None:
                 per_site.append({
                     "site_id": site_id,
-                    "passed": False,
+                    "verdict": "FAIL",
                     "reason": "missing_data",
                     "N": n,
                     "M": None,
                     "l09_status": None,
                 })
+                n_fail_sites += 1
                 continue
             m = l09.get("m_delta_sum", 0)
             l09_status = l09.get("status", "unknown")
-            passed, reason = _per_site_verdict(label, n, m, l09_status)
+            verdict, reason = _per_site_verdict(label, n, m, l09_status)
             per_site.append({
                 "site_id": site_id,
-                "passed": passed,
+                "verdict": verdict,
                 "reason": reason,
                 "N": n,
                 "M": m,
                 "l09_status": l09_status,
             })
-            if passed:
+            if verdict == "PASS":
                 n_pass_sites += 1
+            elif verdict == "FAIL":
+                n_fail_sites += 1
+            else:  # INDETERMINATE
+                n_indeterminate_sites += 1
 
-        pass_rate = n_pass_sites / n_sites_counted if n_sites_counted else 0.0
+        # ADR 0006: denominator is n_evaluable (PASS + FAIL), not cluster_size
+        n_evaluable = n_pass_sites + n_fail_sites
         if label == "indeterminate":
-            verdict = "EXCLUDED"
+            verdict = "EXCLUDED"  # ADR 0003 Cluster 4
+            pass_rate = 0.0
+        elif n_evaluable == 0:
+            verdict = "INDETERMINATE"  # ADR 0006 — all sites un-probeable
+            pass_rate = 0.0
         else:
+            pass_rate = n_pass_sites / n_evaluable
             verdict = _cluster_verdict(pass_rate)
 
         cluster_results.append({
             "cluster_id": cid,
             "label": label,
-            "size": n_sites_counted,
+            "size": len(members),
             "n_pass": n_pass_sites,
+            "n_fail": n_fail_sites,
+            "n_indeterminate": n_indeterminate_sites,
+            "n_evaluable": n_evaluable,
             "pass_rate": pass_rate,
             "verdict": verdict,
             "majority_category": cluster["majority_category"],
@@ -211,10 +238,15 @@ def main() -> int:
         })
 
     # -----------------------------------------------------------------
-    # Investigation-level verdict (Cluster 4 excluded)
+    # Investigation-level verdict:
+    #   - Exclude clusters with label 'indeterminate' (ADR 0003 Cluster 4)
+    #   - Exclude clusters with verdict 'INDETERMINATE' (ADR 0006, all members un-probeable)
     # -----------------------------------------------------------------
 
-    evaluated = [c for c in cluster_results if c["label"] != "indeterminate"]
+    evaluated = [
+        c for c in cluster_results
+        if c["label"] != "indeterminate" and c["verdict"] != "INDETERMINATE"
+    ]
     n_evaluated = len(evaluated)
     n_pass = sum(1 for c in evaluated if c["verdict"] == "PASS")
     n_pass_soft = sum(1 for c in evaluated if c["verdict"] in ("PASS", "SOFT PASS"))
@@ -242,20 +274,22 @@ def main() -> int:
         "",
         "## Scoring summary",
         "",
-        f"- Evaluated clusters (ADR 0003 part (a)): {n_evaluated} of {len(cluster_results)} (Cluster 4 INDETERMINATE excluded)",
+        f"- Evaluated clusters: {n_evaluated} of {len(cluster_results)} (Cluster 4 label INDETERMINATE per ADR 0003; additionally any cluster with all sites INDETERMINATE per ADR 0006 is excluded)",
         f"- Clusters at Pass: {n_pass}",
         f"- Clusters at Pass or Soft Pass: {n_pass_soft}",
         f"- Halt trigger (dynamic-cluster fail → scope-down Methodology D): {'YES' if scope_down_trigger else 'no'}",
         "",
         "## Per-cluster verdicts",
         "",
-        "| cluster | label | size | n_pass | pass_rate | verdict | majority category |",
-        "|---:|---|---:|---:|---:|---|---|",
+        "| cluster | label | size | n_pass | n_fail | n_indet | n_eval | pass_rate | verdict | majority category |",
+        "|---:|---|---:|---:|---:|---:|---:|---:|---|---|",
     ]
     for c in cluster_results:
+        pass_rate_cell = f"{c['pass_rate']:.4f}" if c["n_evaluable"] > 0 else "—"
         lines.append(
             f"| {c['cluster_id']} | {c['label']} | {c['size']} | {c['n_pass']} | "
-            f"{c['pass_rate']:.4f} | {c['verdict']} | {c['majority_category']} |"
+            f"{c['n_fail']} | {c['n_indeterminate']} | {c['n_evaluable']} | "
+            f"{pass_rate_cell} | {c['verdict']} | {c['majority_category']} |"
         )
 
     lines.extend([
@@ -279,7 +313,7 @@ def main() -> int:
         "",
         "## Per-site detail",
         "",
-        "| cluster | site_id | label | N | M | threshold | passed | reason |",
+        "| cluster | site_id | label | N | M | threshold | verdict | reason |",
         "|---:|---|---|---:|---:|---|---|---|",
     ])
     for c in cluster_results:
@@ -294,7 +328,7 @@ def main() -> int:
             lines.append(
                 f"| {c['cluster_id']} | {s['site_id']} | {c['label']} | "
                 f"{s['N']} | {s['M']} | {threshold_desc} | "
-                f"{'yes' if s['passed'] else 'no'} | {s['reason']} |"
+                f"{s['verdict']} | {s['reason']} |"
             )
 
     lines.extend([
