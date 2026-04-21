@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>probe rescan</title>
+    <style>
+        body { font-family: sans-serif; margin: 1em; }
+        form { display: grid; grid-template-columns: auto 1fr; gap: 0.5em; margin: 1em 0; max-width: 30em; }
+        [hidden] { display: none; }
+    </style>
+</head>
+<body>
+    <header><h1>rescan fixture</h1></header>
+    <nav aria-label="Primary">
+        <a id="nav-home" href="#home">Home</a>
+        <a id="nav-external" href="rescan-other.html">Navigate away</a>
+    </nav>
+    <main>
+        <button id="btn-reveal" aria-expanded="false" aria-controls="revealed-panel">Reveal panel</button>
+        <div id="revealed-panel" hidden>
+            <button id="btn-inner">Inner button</button>
+            <input id="input-inner" type="text" aria-label="Inner input">
+        </div>
+        <button id="btn-noop">Does nothing</button>
+        <button id="btn-has-popup" aria-haspopup="menu">Open menu</button>
+        <form>
+            <label for="input-username">Username</label>
+            <input id="input-username" type="text" required>
+        </form>
+    </main>
+    <script>
+        document.getElementById('btn-reveal').addEventListener('click', () => {
+            document.getElementById('revealed-panel').hidden = false;
+            document.getElementById('btn-reveal').setAttribute('aria-expanded', 'true');
+        });
+        // btn-noop: no handler
+        // btn-has-popup: no handler (popup not actually opened; just has the attribute)
+        // nav-home: anchor navigation (URL fragment change)
+        // nav-external: real navigation to rescan-other.html
+    </script>
+</body>
+</html>
