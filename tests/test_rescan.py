@@ -293,8 +293,14 @@ class TestRescanEndToEnd:
             if o.candidate.accessible_name and "nothing" in o.candidate.accessible_name.lower()
         ]
         assert len(noop_outcomes) == 1
-        assert noop_outcomes[0].kind == "no_change"
-        assert noop_outcomes[0].delta_added == []
+        o = noop_outcomes[0]
+        assert o.kind == "no_change", (
+            f"got kind={o.kind}; "
+            f"pre_size={o.pre_fingerprint_size}, post_size={o.post_fingerprint_size}, "
+            f"delta_added={o.delta_added}, delta_removed={o.delta_removed}, "
+            f"error={o.error_message}"
+        )
+        assert o.delta_added == []
 
     def test_external_link_produces_navigation(self, rescan_result: RescanResult):
         """rescan.html's nav-external goes to rescan-other.html — URL changes."""
