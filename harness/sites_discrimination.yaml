@@ -1,0 +1,250 @@
+# L-07 discrimination site pool — PRE-REGISTERED
+#
+# Commit: chore(L-07) — committed BEFORE harness/run_discrimination.py is invoked.
+# Any change to this list AFTER evidence collection begins is a rubric-drift
+# event per BUILD.md §R4.
+#
+# Pool size: 40. Per operator 2026-04-21: "corpus size 40, take first 30 ok.
+# Run all 40 probes, take the first 30 that returned ok in deterministic
+# site-ID-sorted order. If fewer than 25 survive, halt before clustering."
+#
+# Category distribution (7/7/7/7/6/6 = 40):
+#   7 e-commerce (over-provision: L-06 saw 1/2 e-commerce fail)
+#   7 news       (over-provision: L-06 saw 2/2 news fail)
+#   7 saas       (over-provision: L-06 saw 1/2 saas fail — SPA networkidle)
+#   7 marketing
+#   6 forum
+#   6 misc
+#
+# Site-ID scheme: d01..d40 round-robin-interleaved by category. First six IDs
+# are one-per-category; then cycle. This produces balanced category coverage
+# under the first-30-ok mechanical filter even if some sites fail:
+#   - all 40 ok → first 30 = 5 per category × 6 (perfectly balanced)
+#   - asymmetric failures → first 30 contains mix but not dominated by any
+#     single category
+#
+# Stability assumption (inherited from L-06): entry pages chosen to be mostly-
+# static. News picks lean toward Wikipedia's news portal + older/minimal-JS
+# sites (slashdot, NPR) — L-06's failure of modern editorial JS stacks (Ars,
+# Verge) is accepted as real-world signal, over-provisioned against.
+#
+# Automation compatibility: L-06 experience inherited. Known-hostile sites
+# (Amazon-class, Google search, aggressive Cloudflare-gated) deliberately
+# avoided. SPA-heavy SaaS logins that failed L-06 (Asana) replaced with
+# server-rendered variants (GitHub, GitLab) plus a few SPAs for variety.
+
+category_distribution:
+  e-commerce: 7
+  news: 7
+  saas: 7
+  marketing: 7
+  forum: 6
+  misc: 6
+
+sites:
+  # Round 1 — one of each category
+  - id: d01-ecom-01
+    url: https://shop.tesla.com/
+    category: e-commerce
+    justification: "Tesla Shop (Shopify-backed). L-06 verified OK. Representative of Shopify shape class."
+
+  - id: d02-news-01
+    url: https://en.wikipedia.org/wiki/Portal:Current_events
+    category: news
+    justification: "Wikipedia Current Events portal. MediaWiki-generated news aggregator; editorial stability; minimal JS. Counterweight to modern-editorial-JS news stacks."
+
+  - id: d03-saas-01
+    url: https://linear.app/login
+    category: saas
+    justification: "Linear login. L-06 verified OK. SPA login that networkidle resolves cleanly (unlike Asana)."
+
+  - id: d04-mkt-01
+    url: https://stripe.com/
+    category: marketing
+    justification: "Stripe marketing landing. L-06 verified OK. Dev-tool vertical, semantic HTML."
+
+  - id: d05-forum-01
+    url: https://news.ycombinator.com/
+    category: forum
+    justification: "Hacker News. L-06 verified OK. Canonical forum/aggregator; 200-endpoint cap saturated but deterministic."
+
+  - id: d06-misc-01
+    url: https://en.wikipedia.org/wiki/Web_accessibility
+    category: misc
+    justification: "Wikipedia Web accessibility article. L-06 verified OK (drove 100% of within-site variance — content-rich article with dynamic header widgets)."
+
+  # Round 2
+  - id: d07-ecom-02
+    url: https://themes.shopify.com/
+    category: e-commerce
+    justification: "Shopify theme showcase. Public browsing entry; mainstream Shopify site; should be automation-friendly."
+
+  - id: d08-news-02
+    url: https://slashdot.org/
+    category: news
+    justification: "Slashdot. Old-school tech news; minimal JS; legendary automation tolerance. Counterweight to modern editorial."
+
+  - id: d09-saas-02
+    url: https://github.com/login
+    category: saas
+    justification: "GitHub login. Server-rendered Rails app; widely-used dev-tool login form."
+
+  - id: d10-mkt-02
+    url: https://tailwindcss.com/
+    category: marketing
+    justification: "Tailwind CSS landing. L-06 verified OK. Next.js + Tailwind; meta-dogfood dev-tool marketing."
+
+  - id: d11-forum-02
+    url: https://lobste.rs/
+    category: forum
+    justification: "Lobsters. HN-alternative aggregator; minimal JS; smaller community."
+
+  - id: d12-misc-02
+    url: https://en.wikipedia.org/wiki/Python_(programming_language)
+    category: misc
+    justification: "Wikipedia Python article. Different Wikipedia article to Web-accessibility to test within-category within-Wikipedia variance."
+
+  # Round 3
+  - id: d13-ecom-03
+    url: https://www.allbirds.com/
+    category: e-commerce
+    justification: "Allbirds DTC brand. Modern commerce; medium-sized operation."
+
+  - id: d14-news-03
+    url: https://www.npr.org/
+    category: news
+    justification: "NPR homepage. Public-radio news; mostly-static structure."
+
+  - id: d15-saas-03
+    url: https://gitlab.com/users/sign_in
+    category: saas
+    justification: "GitLab login. Rails-based SaaS dev tool; server-rendered; counterweight to SPA logins."
+
+  - id: d16-mkt-03
+    url: https://vercel.com/
+    category: marketing
+    justification: "Vercel marketing landing. Next.js platform dev-tool vertical."
+
+  - id: d17-forum-03
+    url: https://stackoverflow.com/questions
+    category: forum
+    justification: "Stack Overflow questions listing. Canonical Q&A; mostly-static listing shape."
+
+  - id: d18-misc-03
+    url: https://developer.mozilla.org/en-US/docs/Web/HTML
+    category: misc
+    justification: "MDN HTML docs. Mozilla developer docs; content-rich technical article."
+
+  # Round 4
+  - id: d19-ecom-04
+    url: https://www.arcteryx.com/us/en/
+    category: e-commerce
+    justification: "Arc'teryx outdoor e-commerce. Mid-size retail operation; different from Tesla/Allbirds platforms."
+
+  - id: d20-news-04
+    url: https://www.reuters.com/
+    category: news
+    justification: "Reuters. Wire-service news; editorial but more structural than tabloid."
+
+  - id: d21-saas-04
+    url: https://slack.com/signin
+    category: saas
+    justification: "Slack signin. SaaS-login category; mixed server/client rendering."
+
+  - id: d22-mkt-04
+    url: https://supabase.com/
+    category: marketing
+    justification: "Supabase marketing landing. Dev-tool marketing; Firebase-alternative."
+
+  - id: d23-forum-04
+    url: https://unix.stackexchange.com/
+    category: forum
+    justification: "Unix Stack Exchange. Same platform as Stack Overflow but different domain; tests within-category (within-SE-platform) consistency."
+
+  - id: d24-misc-04
+    url: https://docs.python.org/3/
+    category: misc
+    justification: "Python official documentation. Sphinx-generated docs; content-rich technical docs."
+
+  # Round 5
+  - id: d25-ecom-05
+    url: https://shop.nintendo.com/
+    category: e-commerce
+    justification: "Nintendo official shop. Large branded commerce site."
+
+  - id: d26-news-05
+    url: https://apnews.com/
+    category: news
+    justification: "AP News. Wire service; structural focus on article lists."
+
+  - id: d27-saas-05
+    url: https://trello.com/login
+    category: saas
+    justification: "Trello login. Atlassian SaaS login; SPA-heavy."
+
+  - id: d28-mkt-05
+    url: https://pytorch.org/
+    category: marketing
+    justification: "PyTorch landing. ML framework marketing; academic/open-source vertical."
+
+  - id: d29-forum-05
+    url: https://tildes.net/
+    category: forum
+    justification: "Tildes. Invite-only community aggregator; minimal JS; HN-alternative."
+
+  - id: d30-misc-05
+    url: https://www.rfc-editor.org/rfc/rfc8259.html
+    category: misc
+    justification: "RFC 8259 (JSON specification). Plain-HTML technical document; extreme simplicity floor."
+
+  # Round 6
+  - id: d31-ecom-06
+    url: https://www.indiegogo.com/
+    category: e-commerce
+    justification: "Indiegogo crowdfunding landing. Browse/campaign listing shape; modern JS."
+
+  - id: d32-news-06
+    url: https://www.bbc.com/news
+    category: news
+    justification: "BBC News homepage. International mainstream news; tests international-site automation."
+
+  - id: d33-saas-06
+    url: https://vercel.com/login
+    category: saas
+    justification: "Vercel login. SPA-based platform dev-tool login."
+
+  - id: d34-mkt-06
+    url: https://nextjs.org/
+    category: marketing
+    justification: "Next.js landing. Framework marketing; Vercel's own Next.js site."
+
+  - id: d35-forum-06
+    url: https://superuser.com/
+    category: forum
+    justification: "Super User (Stack Exchange). Same platform as SO/Unix SE — tests SE-platform intra-category tightness."
+
+  - id: d36-misc-06
+    url: https://en.wiktionary.org/wiki/lantern
+    category: misc
+    justification: "Wiktionary entry for 'lantern'. MediaWiki-generated dictionary; different content domain from Wikipedia."
+
+  # Extras (rounds 7 — only the 4 categories with 7 sites)
+  - id: d37-ecom-07
+    url: https://www.uniqlo.com/us/en/
+    category: e-commerce
+    justification: "Uniqlo US retail. International apparel commerce."
+
+  - id: d38-news-07
+    url: https://www.propublica.org/
+    category: news
+    justification: "ProPublica. Nonprofit investigative journalism; editorial but structurally article-list."
+
+  - id: d39-saas-07
+    url: https://dashboard.stripe.com/login
+    category: saas
+    justification: "Stripe dashboard login. Second login from a vendor whose marketing page is also in corpus (d04-mkt-01) — tests dashboard-login vs marketing-landing shape distinction within the same vendor."
+
+  - id: d40-mkt-07
+    url: https://fastly.com/
+    category: marketing
+    justification: "Fastly landing. CDN/edge dev-tool marketing."
