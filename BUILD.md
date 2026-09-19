@@ -1,6 +1,6 @@
 # Lantern — Build Contract (v1, cairn-explicit)
 
-Claude Opus 4.7 in Claude Code, 1M context. You are building **Lantern** — a probe-based schema inference system for undocumented web surfaces that plugs into Foxworks Sherpa as an upstream classifier.
+This is the build contract I wrote before starting **Lantern**, a probe-based schema inference system for undocumented web surfaces that plugs into Foxworks Sherpa as an upstream classifier. It was the working brief for an agent-assisted build, so the imperative voice in the sections below is deliberate: it tells the build what it may and may not do.
 
 Lantern is a separate repo from Sherpa. It is developed asynchronous to Sherpa's harden sequence. The two integrate at a single contract boundary, specified in §R2.
 
@@ -234,7 +234,7 @@ Location rationale: `harness/` sits at repo root (not inside the `lantern/` pack
 
 ### R1.4 — Project identity
 
-Lantern is a separate Foxworks project from Sherpa. README has its own project identity. License posture: not yet decided; keep private-repo-compatible until commercial identity is pinned. Publishability as research artifact is a Foxworks-level decision, not a build-time decision. Do not add public-repo tooling (badges, contributing guides, CI against public forks) unless explicitly scoped.
+Lantern is a separate Foxworks project from Sherpa. README has its own project identity. License: MIT (decided 2026-09-19 when the repo went public). Do not add public-repo tooling (badges, contributing guides, CI against public forks) unless explicitly scoped.
 
 ---
 
