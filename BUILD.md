@@ -1,6 +1,6 @@
 # Lantern — Build Contract (v1, cairn-explicit)
 
-This is the build contract I wrote before starting **Lantern**, a probe-based schema inference system for undocumented web surfaces that plugs into Foxworks Sherpa as an upstream classifier. It was the working brief for an agent-assisted build, so the imperative voice in the sections below is deliberate: it tells the build what it may and may not do.
+This is the build contract I wrote before starting **Lantern**, a probe-based schema inference system for undocumented web surfaces that plugs into Sherpa, a separate browser-agent project of mine that is still private, as an upstream classifier. It was the working brief for an agent-assisted build, so the imperative voice in the sections below is deliberate: it tells the build what it may and may not do.
 
 Lantern is a separate repo from Sherpa. It is developed asynchronous to Sherpa's harden sequence. The two integrate at a single contract boundary, specified in §R2.
 
@@ -40,7 +40,7 @@ After R0.1–R0.6 land and `LANTERN.md` is frozen, proceed to §C0 and §1. Do n
 
 Lantern meets three Tier 3 triggers from the cairn rubric:
 
-1. **Multiple novel primitives.** Tab-order traversal via Playwright, full AX-tree extraction via CDP, three-pass state-change protocol, role-sequence Levenshtein fingerprinting, LLM-backed hint generation. None of these exist in the Foxworks codebase. Multiple unverified surfaces compose in a single pipeline.
+1. **Multiple novel primitives.** Tab-order traversal via Playwright, full AX-tree extraction via CDP, three-pass state-change protocol, role-sequence Levenshtein fingerprinting, LLM-backed hint generation. None of these exist in my existing codebase. Multiple unverified surfaces compose in a single pipeline.
 2. **Bleeding-edge APIs.** Playwright's accessibility snapshot API and CDP's `Accessibility.getFullAXTree` are both evolving surfaces. Training data is stale. Spikes are mandatory before any pipeline integration.
 3. **Reputation-risk via Sherpa integration.** If Lantern ships bad hints to Sherpa, Sherpa's executor pass rate degrades — visible to users, visible to your own harden-sequence metrics. The utility test is where this risk surfaces; failure mode protection (soft-fallthrough, confidence threshold, revert diff) is mandatory.
 
@@ -234,7 +234,7 @@ Location rationale: `harness/` sits at repo root (not inside the `lantern/` pack
 
 ### R1.4 — Project identity
 
-Lantern is a separate Foxworks project from Sherpa. README has its own project identity. License: MIT (decided 2026-09-19 when the repo went public). Do not add public-repo tooling (badges, contributing guides, CI against public forks) unless explicitly scoped.
+README has its own project identity. License: MIT (decided 2026-09-19 when the repo went public). Do not add public-repo tooling (badges, contributing guides, CI against public forks) unless explicitly scoped.
 
 ---
 

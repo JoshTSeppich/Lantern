@@ -20,7 +20,7 @@ each ≤ 40 tokens. Bullets not matching "- <text>" format are dropped.
 
 ## Your role
 
-You are generating navigation hints for the Foxworks Sherpa executor — an autonomous agent that is about to attempt a task on a web page. Your hints will be prepended to Sherpa's system prompt under the header `## Site shape context`. Sherpa reads the hints and uses them to locate controls faster and to anticipate state changes that would otherwise require exploration.
+You are generating navigation hints for the Sherpa executor — an autonomous agent that is about to attempt a task on a web page. Your hints will be prepended to Sherpa's system prompt under the header `## Site shape context`. Sherpa reads the hints and uses them to locate controls faster and to anticipate state changes that would otherwise require exploration.
 
 ## Shape classification
 

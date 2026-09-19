@@ -1,6 +1,6 @@
 # Lantern
 
-Lantern infers the shape of a web page from its accessibility tree. It probes a page in headless Chromium, records the role and state of each focusable element in tab order, and turns that sequence into a fingerprint that can be compared across sites. I built it as the upstream classifier for Foxworks Sherpa, a separate browser-agent project that is still private, behind one frozen call: `classify(url) -> LanternResult`.
+Lantern infers the shape of a web page from its accessibility tree. It probes a page in headless Chromium, records the role and state of each focusable element in tab order, and turns that sequence into a fingerprint that can be compared across sites. I built it as the upstream classifier for Sherpa, a separate browser-agent project of mine that is still private, behind one frozen call: `classify(url) -> LanternResult`.
 
 ## Status
 
